@@ -47,7 +47,12 @@ int main(void)
     
     do {
         game_control(reel, reel_num, &money);
-    } while (money);
+        if (money == 0) {
+            gotoxy(1, 21);
+            printf("잔액이 0원이 되었습니다. 게임이 종료됩니다.\n");
+            break; 
+        }
+    } while (money > 0);
     
     gotoxy(3, 20);
     return 0;
@@ -141,23 +146,16 @@ void gotoxy(int x, int y)
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Pos);
 }
 
-int game_progress(int &money) {
+int game_progress(int *money) {
     int bet;
 
-    bet = get_valid_bet(money);  
+    bet = get_valid_bet(*money);  
 
     if (bet == 0) {
         exit(0);  
     }
     
-    gotoxy(1, 24);
-    printf("배팅 금액:      | 남은 금액: %d원", money);
-
-    money -= bet;  
-    gotoxy(1, 24);
-    printf("배팅 금액: %d원 | 남은 금액: %d원", bet, money);
-
-    return bet;
+    return bet; 
 }
 
 
@@ -220,7 +218,12 @@ void game_control(char reel[][3], int reel_num[][3], int *money)
     clock_t start, end;
 
     display_reel(reel, reel_num, 0);
-    bet = game_progress(*money);
+    
+    bet = game_progress(money); 
+
+    *money -= bet;  
+    gotoxy(1, 24);
+    printf("배팅 금액: %d원 | 남은 금액: %d원", bet, *money);
 
     for (i = 0; i < 3; i++) {
         start = clock();
@@ -236,10 +239,9 @@ void game_control(char reel[][3], int reel_num[][3], int *money)
     }
     getch();
     thank = return_money(num, bet, &case_num);
-    if (thank == 0)
-        *money -= bet;
-    else
-        *money += thank;
+    if (thank > 0) {
+        *money += thank; 
+    }
 
     if (num[0] == num[1] && num[1] == num[2]) {
         display_jackpot();
@@ -306,7 +308,7 @@ void display_start_screen(void)
     printf("          슬롯머신 게임             \n");
     printf("====================================\n");
     printf("게임을 시작하려면 아무 키나 누르세요\n");
-    getch();  // 키 입력 대기
+    getch(); 
 }
 
 void display_jackpot(void)
